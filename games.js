@@ -40,7 +40,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===================== SLOTS =====================
-const symbols = ['⭕', '🇼', '💎', '🍒', '🍋', '7️⃣'];
+// Only 3 symbols now (O, W, Cherry) so a win is actually reachable --
+// with 6 symbols the combined odds of hitting anything were under 4%.
+const symbols = ['⭕', '🇼', '🍒'];
 
 function initSlots() {
     document.getElementById("spin-btn").addEventListener("click", () => {
@@ -79,15 +81,15 @@ function initSlots() {
 
 function checkSlotsWin(results, bet) {
     if (results[0] === '⭕' && results[1] === '🇼' && results[2] === '⭕') {
-        const win = bet * 35;
+        const win = bet * 5;
         adjustBalance(win);
         Sounds.jackpot();
         if (window.confettiBurst) confettiBurst(50);
         if (window.registerRoundResult) registerRoundResult(true);
-        setStatus("slots-status", `OwO Jackpot! +${win}`, "win");
-        showToast(`Insane! You hit the OwO Jackpot for ${win}!`, "success");
+        setStatus("slots-status", `OwO! +${win}`, "win");
+        showToast(`OwO! You hit the OwO combo for ${win}!`, "success");
     } else if (results[0] === results[1] && results[1] === results[2]) {
-        const win = bet * 10;
+        const win = bet * 3;
         adjustBalance(win);
         Sounds.win();
         if (window.registerRoundResult) registerRoundResult(true);
@@ -105,11 +107,24 @@ function checkSlotsWin(results, bet) {
 // The grid is always rendered: either the live/frozen result of the last
 // round, or an empty "ready" grid before the very first bet.
 const MINES_SIZE = 25;
-const MINES_HOUSE_EDGE = 1.36;
-// Raising the fair odds to a power > 1 makes each additional safe pick pay
-// off increasingly more instead of growing at a steady rate -- slow early
-// on, then ramping up fast the deeper you go.
-const MINES_CURVE_EXPONENT = 2.7;
+const MINES_HOUSE_EDGE = 1.2;
+// Absolute safety net: no round can pay out more than this multiple of the
+// bet, no matter what the curve math produces. This is what actually
+// prevents a 250,000 bet from ever turning into billions again.
+const MINES_MAX_MULTIPLIER = 2000;
+// The exponent scales DOWN as mine count goes UP, so boards with very few
+// safe tiles left (24 mines) don't explode the way a flat exponent did
+// (that flat 2.7 let a 24-mine board pay over 8000x on the very first
+// pick). Within each tier, the exponent still compounds with every reveal,
+// so the multiplier accelerates as a run goes on -- e.g. with 3 mines it
+// climbs roughly 1.67x -> 2.37x -> 3.41x -> 4.98x as you keep picking,
+// each safe tile paying off noticeably more than the last.
+function minesCurveExponent(mineCount) {
+    if (mineCount <= 3) return 2.6;
+    if (mineCount <= 5) return 2.0;
+    if (mineCount <= 10) return 1.5;
+    return 1.15; // 11-24 mines
+}
 
 let minesActive = false;
 let minesMultiplier = 1.0;
@@ -129,7 +144,9 @@ function minesFairMultiplier(revealed, mineCount) {
 }
 
 function minesMultiplierFor(revealed, mineCount) {
-    return Math.pow(minesFairMultiplier(revealed, mineCount), MINES_CURVE_EXPONENT) * MINES_HOUSE_EDGE;
+    const exponent = minesCurveExponent(mineCount);
+    const raw = Math.pow(minesFairMultiplier(revealed, mineCount), exponent) * MINES_HOUSE_EDGE;
+    return Math.min(raw, MINES_MAX_MULTIPLIER);
 }
 
 function saveMinesState(state) {
@@ -356,10 +373,10 @@ function initMines() {
 // high and ramps down towards the final lanes, with the danger curve
 // accelerating near the end so the last stretch is the scariest.
 const CROSS_LANES = 24;
-const CROSS_SURVIVE_START = 0.95; // chance of surviving lane 1
-const CROSS_SURVIVE_END = 0.5;    // chance of surviving the final lane
-const CROSS_RISK_CURVE = 1.4;     // >1 = danger ramps up faster near the end
-const CROSS_HOUSE_EDGE = 2.5;
+const CROSS_SURVIVE_START = 0.97; // chance of surviving lane 1 (was 0.95)
+const CROSS_SURVIVE_END = 0.6;    // chance of surviving the final lane (was 0.5)
+const CROSS_RISK_CURVE = 1.2;     // >1 = danger ramps up faster near the end (was 1.4, now gentler)
+const CROSS_HOUSE_EDGE = 3.2;     // bigger payout multiplier across the board (was 2.5)
 
 let crossActive = false;
 let crossBet = 0;
