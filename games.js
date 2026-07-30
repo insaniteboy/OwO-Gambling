@@ -370,14 +370,13 @@ function initMines() {
 // Lane-by-lane cashout ladder (like Mines): each successful crossing raises
 // the multiplier, and you can cash out any time. Get hit and you lose the
 // bet. 24 lanes total, ending the round automatically if you make it across.
-// Traffic gets more dangerous the further you go: survival chance starts
-// high and ramps down towards the final lanes, with the danger curve
-// accelerating near the end so the last stretch is the scariest.
+// Heavily debuffed flat-odds design: every lane is a straight coinflip
+// (50% survive), which makes the multiplier ladder a clean doubling
+// sequence -- 1.24x, 2.48x, 4.96x, 9.92x... -- instead of the old sliding
+// danger curve.
 const CROSS_LANES = 24;
-const CROSS_SURVIVE_START = 0.97; // chance of surviving lane 1 (was 0.95)
-const CROSS_SURVIVE_END = 0.6;    // chance of surviving the final lane (was 0.5)
-const CROSS_RISK_CURVE = 1.2;     // >1 = danger ramps up faster near the end (was 1.4, now gentler)
-const CROSS_HOUSE_EDGE = 3.2;     // bigger payout multiplier across the board (was 2.5)
+const CROSS_SURVIVE_CHANCE = 0.5;  // flat 50% survive chance on every lane
+const CROSS_HOUSE_EDGE = 0.62;     // 1 / 0.5 * 0.62 = 1.24x on lane 1, doubling each lane after
 
 let crossActive = false;
 let crossBet = 0;
@@ -385,9 +384,9 @@ let crossLane = 0;
 
 function crossSurviveChanceAt(lane) {
     // lane is 1-indexed: chance of surviving THIS lane's traffic.
-    const t = (lane - 1) / (CROSS_LANES - 1);
-    const eased = Math.pow(t, CROSS_RISK_CURVE);
-    return CROSS_SURVIVE_START - (CROSS_SURVIVE_START - CROSS_SURVIVE_END) * eased;
+    // Kept as a function (rather than inlining the constant) since the
+    // ladder rendering and hue calculation below still call it per-lane.
+    return CROSS_SURVIVE_CHANCE;
 }
 
 function crossMultiplierAt(lane) {
