@@ -1,5 +1,5 @@
 // games.js - Game Mechanics
-const MAX_BET = 250000;
+const MAX_BET = 10000000;
 
 // --- Helpers ---
 function getBet(inputId) {
