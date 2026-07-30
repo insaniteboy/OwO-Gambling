@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="set-favicon.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwO Gambling</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <!-- TOS Modal -->
+    <div id="tos-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-icon">🎲</span>
+            <h2>Welcome to OwO Gambling</h2>
+            <p>By clicking "Accept", you agree to our Terms of Service. This site uses a virtual currency called "OwO" and does <strong>NOT</strong> involve real money. You also agree to let us store your game data locally on your device.</p>
+            <p class="modal-subnote">Max bet across all games: 250,000 OwO</p>
+            <button id="accept-tos" class="btn btn-primary">I Accept</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="logo">
+            <span class="logo-icon">🎲</span> OwO Gambling
+        </div>
+        <div class="header-right">
+            <div class="streak-pill" id="streak-display" style="display:none;"></div>
+            <div class="balance-pill">
+                <span class="currency-icon">🪙</span>
+                <span id="balance-display">1,000</span>
+            </div>
+            <button id="daily-btn" class="btn btn-secondary">🎁 Claim Daily</button>
+        </div>
+    </header>
+
+    <nav class="game-selector">
+        <button class="nav-btn active" data-target="slots">
+            <span class="nav-icon">🎰</span> Slots
+        </button>
+        <button class="nav-btn" data-target="mines">
+            <span class="nav-icon">💎</span> Mines
+        </button>
+        <button class="nav-btn" data-target="cross">
+            <span class="nav-icon">🐔</span> Cross The Road
+        </button>
+        <button class="nav-btn" data-target="dice">
+            <span class="nav-icon">🎯</span> Dice
+        </button>
+        <button class="nav-btn" data-target="coinflip">
+            <span class="nav-icon">🪙</span> Coinflip
+        </button>
+    </nav>
+
+    <main id="game-container">
+        <!-- SLOTS GAME -->
+        <section id="slots" class="game-section active">
+            <div class="game-header">
+                <h2><span class="game-header-icon">🎰</span> OwO Slots</h2>
+                <div class="status-badge" id="slots-status">Waiting for bet...</div>
+            </div>
+
+            <div class="slots-machine">
+                <div class="slot-window">
+                    <div class="slot" id="slot1">➖</div>
+                </div>
+                <div class="slot-window">
+                    <div class="slot" id="slot2">➖</div>
+                </div>
+                <div class="slot-window">
+                    <div class="slot" id="slot3">➖</div>
+                </div>
+            </div>
+            <p class="paytable">🇼➖⭕ pays 35x &nbsp;•&nbsp; Any 3 matching pays 10x</p>
+
+            <div class="controls-panel">
+                <div class="input-group">
+                    <label for="slots-bet">Bet Amount <span class="max-hint">(max 250,000)</span></label>
+                    <input type="number" id="slots-bet" value="10" min="1" max="250000">
+                </div>
+                <button id="spin-btn" class="btn btn-play">Spin</button>
+            </div>
+        </section>
+
+        <!-- MINES GAME -->
+        <section id="mines" class="game-section">
+            <div class="game-header">
+                <h2><span class="game-header-icon">💎</span> OwO Mines</h2>
+                <div class="status-badge" id="mines-status">Waiting for bet...</div>
+            </div>
+
+            <div class="mines-layout">
+                <div class="mines-main">
+                    <div class="mines-grid" id="mines-grid">
+                        <!-- Always populated by JS, either fresh or showing the last round -->
+                    </div>
+                    <p class="mines-next-hint" id="mines-next-hint">Pick a bet and number of mines, then hit Bet to start.</p>
+                </div>
+                <div class="controls-panel side-panel">
+                    <div class="input-group">
+                        <label for="mines-bet">Bet Amount <span class="max-hint">(max 250,000)</span></label>
+                        <input type="number" id="mines-bet" value="10" min="1" max="250000">
+                    </div>
+                    <div class="input-group">
+                        <label for="mines-count">Mines <span class="max-hint">(more = higher multi)</span></label>
+                        <input type="number" id="mines-count" value="5" min="1" max="24">
+                    </div>
+                    <div class="mine-presets">
+                        <button class="preset-btn" data-mines="3">3</button>
+                        <button class="preset-btn" data-mines="5">5</button>
+                        <button class="preset-btn" data-mines="10">10</button>
+                        <button class="preset-btn" data-mines="24">24</button>
+                    </div>
+                    <button id="start-mines-btn" class="btn btn-play">Bet</button>
+                    <button id="cashout-mines-btn" class="btn btn-cashout" style="display: none;">Cashout</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- CROSS THE ROAD GAME -->
+        <section id="cross" class="game-section">
+            <div class="game-header">
+                <h2><span class="game-header-icon">🐔</span> Cross The Road</h2>
+                <div class="status-badge" id="cross-status">Waiting for bet...</div>
+            </div>
+
+            <div class="cross-layout">
+                <div class="cross-ladder" id="cross-ladder">
+                    <!-- Lane rungs generated by JS -->
+                </div>
+                <div class="cross-stage">
+                    <div class="cross-road-visual" id="cross-road-visual">
+                        <div class="cross-token" id="cross-token">🐔</div>
+                    </div>
+                    <p class="cross-hint" id="cross-hint">Place a bet, then cross lane by lane. Cash out anytime — get hit and you lose it all.</p>
+                    <div class="cross-actions">
+                        <button id="cross-attempt-btn" class="btn btn-play" style="display:none;">Cross Next Lane ➡️</button>
+                        <button id="cross-cashout-btn" class="btn btn-cashout" style="display:none;">Cash Out</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-panel">
+                <div class="input-group">
+                    <label for="cross-bet">Bet Amount <span class="max-hint">(max 250,000)</span></label>
+                    <input type="number" id="cross-bet" value="10" min="1" max="250000">
+                </div>
+                <button id="start-cross-btn" class="btn btn-play">Bet</button>
+            </div>
+        </section>
+
+        <!-- DICE GAME -->
+        <section id="dice" class="game-section">
+            <div class="game-header">
+                <h2><span class="game-header-icon">🎯</span> OwO Dice</h2>
+                <div class="status-badge" id="dice-status">Waiting for bet...</div>
+            </div>
+
+            <div class="dice-display">
+                <div class="dice-roll-number" id="dice-roll-number">00.00</div>
+                <div class="dice-track">
+                    <div class="dice-track-fill" id="dice-track-fill"></div>
+                    <div class="dice-track-marker" id="dice-track-marker"></div>
+                </div>
+            </div>
+
+            <div class="dice-mode-toggle">
+                <button class="mode-btn active" id="dice-mode-under" data-mode="under">Roll Under</button>
+                <button class="mode-btn" id="dice-mode-over" data-mode="over">Roll Over</button>
+            </div>
+
+            <div class="input-group full-width">
+                <label for="dice-slider">Target: <span id="dice-target-value">50</span></label>
+                <input type="range" id="dice-slider" min="2" max="98" value="50">
+            </div>
+
+            <div class="dice-stats">
+                <div class="dice-stat">
+                    <span class="dice-stat-label">Win Chance</span>
+                    <span class="dice-stat-value" id="dice-winchance">50.00%</span>
+                </div>
+                <div class="dice-stat">
+                    <span class="dice-stat-label">Multiplier</span>
+                    <span class="dice-stat-value" id="dice-multiplier">2.00x</span>
+                </div>
+            </div>
+            <p class="paytable">Win pays 2x your bet &nbsp;•&nbsp; A miss costs your bet</p>
+
+            <div class="controls-panel">
+                <div class="input-group">
+                    <label for="dice-bet">Bet Amount <span class="max-hint">(max 250,000)</span></label>
+                    <input type="number" id="dice-bet" value="10" min="1" max="250000">
+                </div>
+                <button id="dice-roll-btn" class="btn btn-play">Roll</button>
+            </div>
+        </section>
+
+        <!-- COINFLIP GAME -->
+        <section id="coinflip" class="game-section">
+            <div class="game-header">
+                <h2><span class="game-header-icon">🪙</span> OwO Coinflip</h2>
+                <div class="status-badge" id="coin-status">Waiting for bet...</div>
+            </div>
+
+            <div class="coin-stage">
+                <div class="coin-visual" id="coin-visual">🪙</div>
+            </div>
+
+            <div class="coin-choice">
+                <button class="coin-choice-btn" id="coin-heads-btn" data-choice="heads">
+                    <span class="coin-choice-icon">🪙</span> Heads
+                </button>
+                <button class="coin-choice-btn" id="coin-tails-btn" data-choice="tails">
+                    <span class="coin-choice-icon">🎯</span> Tails
+                </button>
+            </div>
+            <p class="paytable">Correct call pays 2x your bet &nbsp;•&nbsp; A miss costs your bet</p>
+
+            <div class="controls-panel">
+                <div class="input-group">
+                    <label for="coin-bet">Bet Amount <span class="max-hint">(max 250,000)</span></label>
+                    <input type="number" id="coin-bet" value="10" min="1" max="250000">
+                </div>
+                <button id="coin-flip-btn" class="btn btn-play">Flip</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p class="copyright">© Insaniteboy</p>
+    </footer>
+
+    <script src="audio.js"></script>
+    <script src="main.js"></script>
+    <script src="tosverf.js"></script>
+    <script src="games.js"></script>
+</body>
+</html>
