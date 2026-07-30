@@ -521,74 +521,36 @@ function initCross() {
 }
 
 // ===================== DICE =====================
-// Payout scales with win chance (like any real dice game) so the slider
-// can't be abused: a higher win chance always means a lower multiplier,
-// and vice versa. Previously the multiplier was a flat 2x regardless of
-// target, which meant setting the target for a ~95%+ win chance still
-// paid out 2x every time -- a guaranteed money-printing exploit. A loss
-// still just costs the bet (the bet is deducted up front when you roll).
-const DICE_HOUSE_EDGE = 0.01; // 1% house edge, same spirit as MINES_HOUSE_EDGE
+// Always a flat 50/50 roll. There's no slider or mode toggle anymore, so
+// there's no target value for a player to move around at all -- the win
+// chance and multiplier are both fixed constants. A loss still just costs
+// the bet (the bet is deducted up front when you roll).
+const DICE_WIN_CHANCE = 50; // fixed, out of 100 -- not adjustable
+const DICE_WIN_MULTIPLIER = 2;
 const DICE_LOSS_MULTIPLIER = 1;
-let diceMode = "under";
-
-function diceWinChance(target, mode) {
-    return mode === "under" ? target : 100 - target;
-}
-
-function diceMultiplier(winChance) {
-    // Fair-odds payout for this win chance, minus the house edge.
-    // e.g. 50% chance -> ~1.98x, 10% chance -> ~9.9x, 90% chance -> ~1.1x.
-    return (100 / winChance) * (1 - DICE_HOUSE_EDGE);
-}
-
-function updateDiceDisplay() {
-    const target = parseInt(document.getElementById("dice-slider").value);
-    document.getElementById("dice-target-value").innerText = target;
-
-    const chance = diceWinChance(target, diceMode);
-    const multiplier = diceMultiplier(chance);
-    document.getElementById("dice-winchance").innerText = chance.toFixed(2) + "%";
-    document.getElementById("dice-multiplier").innerText = multiplier.toFixed(2) + "x";
-
-    document.getElementById("dice-track-marker").style.left = target + "%";
-    const fill = document.getElementById("dice-track-fill");
-    fill.style.background = diceMode === "under"
-        ? `linear-gradient(90deg, transparent ${target}%, rgba(10,16,22,0.65) ${target}%)`
-        : `linear-gradient(90deg, rgba(10,16,22,0.65) ${target}%, transparent ${target}%)`;
-}
-
-function setDiceMode(mode) {
-    diceMode = mode;
-    document.getElementById("dice-mode-under").classList.toggle("active", mode === "under");
-    document.getElementById("dice-mode-over").classList.toggle("active", mode === "over");
-    updateDiceDisplay();
-}
 
 function initDice() {
-    updateDiceDisplay();
-
-    document.getElementById("dice-slider").addEventListener("input", updateDiceDisplay);
-    document.getElementById("dice-mode-under").addEventListener("click", () => setDiceMode("under"));
-    document.getElementById("dice-mode-over").addEventListener("click", () => setDiceMode("over"));
+    document.getElementById("dice-winchance").innerText = DICE_WIN_CHANCE.toFixed(2) + "%";
+    document.getElementById("dice-multiplier").innerText = DICE_WIN_MULTIPLIER.toFixed(2) + "x";
+    document.getElementById("dice-track-marker").style.left = DICE_WIN_CHANCE + "%";
+    document.getElementById("dice-track-fill").style.background =
+        `linear-gradient(90deg, transparent ${DICE_WIN_CHANCE}%, rgba(10,16,22,0.65) ${DICE_WIN_CHANCE}%)`;
 
     document.getElementById("dice-roll-btn").addEventListener("click", () => {
         const bet = getBet("dice-bet");
         if (!bet) return;
 
         adjustBalance(-bet);
-        const target = parseInt(document.getElementById("dice-slider").value);
-        const chance = diceWinChance(target, diceMode);
-        const multiplier = diceMultiplier(chance);
         Sounds.spin();
 
         const roll = Math.random() * 100;
-        const won = diceMode === "under" ? roll < target : roll > target;
+        const won = roll < DICE_WIN_CHANCE;
         const display = document.getElementById("dice-roll-number");
         display.innerText = roll.toFixed(2);
         display.classList.remove("win", "loss");
 
         if (won) {
-            const payout = Math.floor(bet * multiplier);
+            const payout = Math.floor(bet * DICE_WIN_MULTIPLIER);
             adjustBalance(payout);
             Sounds.win();
             display.classList.add("win");
