@@ -40,9 +40,10 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===================== SLOTS =====================
-// Only 3 symbols now (O, W, Cherry) so a win is actually reachable --
-// with 6 symbols the combined odds of hitting anything were under 4%.
-const symbols = ['⭕', '🇼', '🍒'];
+// Literal "O" and "W" characters -- the emoji versions (⭕ heavy circle,
+// 🇼 regional indicator) don't actually render as the letters O/W on most
+// platforms, they show as a circle glyph and a flag-style tile instead.
+const symbols = ['O', 'W', '🍒'];
 
 function initSlots() {
     document.getElementById("spin-btn").addEventListener("click", () => {
@@ -80,7 +81,7 @@ function initSlots() {
 }
 
 function checkSlotsWin(results, bet) {
-    if (results[0] === '⭕' && results[1] === '🇼' && results[2] === '⭕') {
+    if (results[0] === 'O' && results[1] === 'W' && results[2] === 'O') {
         const win = bet * 5;
         adjustBalance(win);
         Sounds.jackpot();
@@ -122,8 +123,8 @@ const MINES_MAX_MULTIPLIER = 2000;
 function minesCurveExponent(mineCount) {
     if (mineCount <= 3) return 2.6;
     if (mineCount <= 5) return 2.0;
-    if (mineCount <= 10) return 1.5;
-    return 1.15; // 11-24 mines
+    if (mineCount <= 10) return 1.1;  // debuffed from 1.5
+    return 1.0;                        // 11-24 mines, debuffed from 1.15 -- pure fair odds, no extra curve
 }
 
 let minesActive = false;
